@@ -2,4 +2,4 @@ pre-commit:
   commands:
     build:
       stage_fixed: true
-      run: npx pnpm build
+      run: npx pnpm build && git add dist
