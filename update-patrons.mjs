@@ -61,9 +61,9 @@ async function createOrUpdatePR(octokit, branchName) {
             title: "Update supporters list",
             body: "This PR updates the supporters list.",
         });
-        console.log(`Pull request created: ${pr.html_url}`);
+        core.info(`Pull request created: ${pr.html_url}`);
     } else {
-        console.log("Pull request already exists.");
+        core.info("Pull request already exists.");
     }
 }
 
@@ -76,7 +76,18 @@ async function main() {
 
         const data = await fetchSupporterData(CONFIG.JSON_URL);
 
-        if (!Array.isArray(data?.tiers) || data.tiers.some(tier => !Array.isArray(tier.members))) {
+
+
+        if (!Array.isArray(data?.tiers)) {
+            throw new Error("Supporter tiers are missing or malformed.");
+        }
+
+        if (data.tiers.length === 0) {
+            core.warning("No supporters found in the supporter data.");
+            return;
+        }
+
+        if(data.tiers.some(tier => !Array.isArray(tier.members))) {
             throw new Error("Supporter data is missing or malformed.");
         }
 
@@ -93,11 +104,11 @@ async function main() {
                 const updatedContent = await updateFileContent(filePath, pattern, replacement);
                 if (updatedContent) {
                     await fs.writeFile(filePath, updatedContent);
-                    console.log(`Updated ${filePath} with supporter names.`);
+                    core.info(`Updated ${filePath} with supporter names.`);
                     changesMade = true;
                 }
             } catch (err) {
-                console.error(`Failed to process ${filePath}: ${err.message}`);
+                core.error(`Failed to process ${filePath}: ${err.message}`);
             }
         }
 
@@ -113,7 +124,7 @@ async function main() {
             const octokit = new Octokit();
             await createOrUpdatePR(octokit, CONFIG.BRANCH_NAME);
         } else {
-            console.log("No changes detected. Skipping pull request creation.");
+            core.info("No changes detected. Skipping pull request creation.");
         }
     } catch (error) {
         core.setFailed(error.message);

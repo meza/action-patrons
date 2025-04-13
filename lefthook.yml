@@ -2,5 +2,5 @@ pre-commit:
   commands:
     build:
       run: |
-        pnpm build
+        npx pnpm build
         git add dist/
