@@ -16,7 +16,7 @@ importers:
         version: 7.0.2
     devDependencies:
       '@evilmartians/lefthook':
-        specifier: ^1.11.9
+        specifier: 1.11.9
         version: 1.11.9
       '@vercel/ncc':
         specifier: 0.38.3
