@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import { exec } from "child_process";
 import { promisify } from "util";
-import fetch from "node-fetch";
 import core from "@actions/core";
 import { Octokit } from "@octokit/action";
 
