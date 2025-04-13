@@ -7,10 +7,10 @@
     "build": "ncc build update-patrons.mjs -o dist"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@octokit/action": "^7.0.2"
+    "@actions/core": "1.11.1",
+    "@octokit/action": "7.0.2"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.3"
+    "@vercel/ncc": "0.38.3"
   }
 }
