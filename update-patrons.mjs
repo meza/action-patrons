@@ -3,6 +3,8 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import core from "@actions/core";
 import { Octokit } from "@octokit/action";
+import yaml from "js-yaml";
+
 
 const execAsync = promisify(exec);
 
@@ -69,7 +71,7 @@ async function createOrUpdatePR(octokit, branchName) {
 
 async function main() {
     try {
-        const filesToUpdate = JSON.parse(core.getInput("files-to-update") || "[]");
+        const filesToUpdate = yaml.load(core.getInput("files-to-update") || "[]");
         if (!Array.isArray(filesToUpdate) || filesToUpdate.length === 0) {
             throw new Error("No files specified in 'files-to-update'.");
         }
