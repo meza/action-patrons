@@ -1,23 +1,29 @@
-name: "A very cool action"
-description: "Does the very cool thing in a cool way"
+name: Update Supporters List
+description: Fetch supporter names from a JSON URL and update README.md between markers
 
 inputs:
-  node-version:
-    description: "What version to install?"
+  files-to-update:
     required: false
-    default: latest
-
-outputs:
-  npm-version:
-    description: "The version of NPM installed"
-    value: ${{ steps.something.outputs.npm-version }}
+    description: List of files to update
+    default: |
+      - README.md
+  fail-on-missing-markers:
+    required: false
+    description: Fail if markers are missing
+    default: 'true'
+  start-marker:
+    required: false
+    description: Start marker for replacement
+    default: '<!-- marker:patrons-start -->'
+  end-marker:
+    required: false
+    description: End marker for replacement
+    default: '<!-- marker:patrons-end -->'
+  git-email:
+    required: false
+    description: Email for git config
+    default: 'actions@github.com'
 
 runs:
-  using: "composite"
-  steps:
-    - name: Use Node.js ${{ inputs.node-version }}
-      uses: actions/setup-node@v4.0.4
-      id: something
-      with:
-        node-version: ${{ inputs.node-version }}
-        cache: 'pnpm'
+    using: 'node20'
+    main: update-patrons.mjs
