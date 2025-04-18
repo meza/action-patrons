@@ -62450,8 +62450,7 @@ async function setupGitBranch(branchName) {
     await execAsync(`git checkout -B ${branchName}`);
 }
 
-async function createOrUpdatePR(octokit, branchName) {
-    const { owner, repo } = octokit.context.repo || { owner: "default-owner", repo: "default-repo" };
+async function createOrUpdatePR(octokit, branchName, owner, repo) {
     const { data: pullRequests } = await octokit.rest.pulls.list({
         owner,
         repo,
@@ -62528,7 +62527,10 @@ async function main() {
             await execAsync(`git push origin ${CONFIG.BRANCH_NAME}`);
 
             const octokit = new dist_bundle_Octokit();
-            await createOrUpdatePR(octokit, CONFIG.BRANCH_NAME);
+            const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
+            const repo = process.env.GITHUB_REPOSITORY?.split('/')[1];
+
+            await createOrUpdatePR(octokit, CONFIG.BRANCH_NAME, owner, repo);
         } else {
             core.info("No changes detected. Skipping pull request creation.");
         }
