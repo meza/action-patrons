@@ -57,6 +57,27 @@ async function createOrUpdatePR(octokit, branchName, owner, repo) {
             title: "Update supporters list",
             body: "This PR updates the supporters list.",
         });
+
+        // Enable auto-merge using GraphQL
+        try {
+            await octokit.graphql(`
+                mutation EnableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
+                    enablePullRequestAutoMerge(input: {
+                        pullRequestId: $pullRequestId,
+                        mergeMethod: $mergeMethod
+                    }) {
+                        clientMutationId
+                    }
+                }
+            `, {
+                pullRequestId: pr.node_id,
+                mergeMethod: "MERGE"
+            });
+            core.info(`Auto-merge enabled for PR: ${pr.html_url}`);
+        } catch (error) {
+            core.warning(`Failed to enable auto-merge: ${error.message}`);
+        }
+
         core.info(`Pull request created: ${pr.html_url}`);
     } else {
         core.info("Pull request already exists.");
