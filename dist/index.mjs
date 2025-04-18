@@ -62447,13 +62447,7 @@ async function updateFileContent(filePath, pattern, replacement) {
 }
 
 async function setupGitBranch(branchName) {
-    try {
-        await execAsync(`git rev-parse --verify ${branchName}`);
-        await execAsync(`git checkout ${branchName}`);
-        await execAsync(`git pull origin ${branchName}`);
-    } catch {
-        await execAsync(`git checkout -b ${branchName}`);
-    }
+    await execAsync(`git checkout -B ${branchName}`);
 }
 
 async function createOrUpdatePR(octokit, branchName) {
