@@ -115,7 +115,7 @@ async function main() {
             await execAsync(`git config user.email "${gitEmail}"`);
             await execAsync(`git add .`);
             await execAsync(`git commit -m "docs: updated patrons list"`);
-            await execAsync(`git push origin ${CONFIG.BRANCH_NAME}`);
+            await execAsync(`git push -f origin ${CONFIG.BRANCH_NAME}`);
 
             const octokit = new Octokit();
             const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
@@ -127,6 +127,8 @@ async function main() {
         }
     } catch (error) {
         core.setFailed(error.message);
+        await execAsync(`git checkout ${originalBranch}`);
+        await execAsync(`git branch -D ${branchName}`);
     }
 }
 
