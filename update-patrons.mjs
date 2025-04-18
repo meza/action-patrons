@@ -148,7 +148,7 @@ async function main() {
         }
     } catch (error) {
         core.setFailed(error.message);
-        await execAsync(`git checkout ${originalBranch}`);
+        await execAsync("git checkout main");
         await execAsync(`git branch -D ${branchName}`);
     }
 }
