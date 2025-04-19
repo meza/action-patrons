@@ -38,7 +38,6 @@ async function updateFileContent(filePath, pattern, replacement) {
 
 async function setupGitBranch(branchName) {
     await execAsync(`git checkout -B ${branchName}`);
-    await execAsync(`git reset --hard origin/main`);
 }
 
 async function createOrUpdatePR(octokit, branchName, owner, repo) {
@@ -148,8 +147,6 @@ async function main() {
         }
     } catch (error) {
         core.setFailed(error.message);
-        await execAsync("git checkout main");
-        await execAsync(`git branch -D ${CONFIG.BRANCH_NAME}`);
     }
 }
 
