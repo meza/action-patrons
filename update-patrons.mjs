@@ -149,7 +149,7 @@ async function main() {
     } catch (error) {
         core.setFailed(error.message);
         await execAsync("git checkout main");
-        await execAsync(`git branch -D ${branchName}`);
+        await execAsync(`git branch -D ${CONFIG.BRANCH_NAME}`);
     }
 }
 
