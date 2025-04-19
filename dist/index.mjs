@@ -62415,8 +62415,22 @@ var jsYaml = {
 
 
 
-
-const execAsync = (0,external_util_.promisify)(external_child_process_.exec);
+// Enhanced exec with output capture
+const execAsync = async (command) => {
+    core.debug(`Executing: ${command}`);
+    try {
+        const { stdout, stderr } = await (0,external_util_.promisify)(external_child_process_.exec)(command);
+        core.debug(`Command stdout: ${stdout.trim()}`);
+        if (stderr) core.debug(`Command stderr: ${stderr.trim()}`);
+        return { stdout, stderr };
+    } catch (error) {
+        core.error(`Command failed: ${command}`);
+        core.error(`Error message: ${error.message}`);
+        if (error.stdout) core.error(`Error stdout: ${error.stdout}`);
+        if (error.stderr) core.error(`Error stderr: ${error.stderr}`);
+        throw error;
+    }
+};
 
 const CONFIG = {
     JSON_URL: "https://vsbmeza3.com/supporters.json",
@@ -62427,37 +62441,56 @@ const CONFIG = {
 };
 
 async function fetchSupporterData(url) {
+    core.debug(`Fetching supporter data from: ${url}`);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    const data = await res.json();
+    core.debug(`Received supporter data: ${JSON.stringify(data).substring(0, 200)}...`);
+    return data;
 }
 
 async function updateFileContent(filePath, pattern, replacement) {
+    core.debug(`Reading file: ${filePath}`);
     const fileContent = await promises_namespaceObject.readFile(filePath, "utf8");
     const startIndex = fileContent.indexOf(CONFIG.START_MARKER);
     const endIndex = fileContent.indexOf(CONFIG.END_MARKER);
+
+    core.debug(`Markers - start: ${startIndex}, end: ${endIndex}`);
 
     if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
         if (CONFIG.FAIL_ON_MISSING_MARKERS) {
             throw new Error(`Markers are missing or misordered in ${filePath}`);
         }
+        core.warning(`Markers not found in ${filePath}, skipping`);
         return null;
     }
     return fileContent.replace(pattern, replacement);
 }
 
 async function setupGitBranch(branchName) {
-    await execAsync(`git checkout -B ${branchName}`);
+    core.info(`Setting up git branch: ${branchName}`);
+    try {
+        await execAsync(`git checkout -B ${branchName}`);
+        core.info(`Successfully checked out branch: ${branchName}`);
+    } catch (error) {
+        core.setFailed(`Failed to setup git branch: ${error.message}`);
+        throw error;
+    }
 }
 
 async function createOrUpdatePR(octokit, branchName, owner, repo) {
+    core.info(`Creating/updating PR for branch ${branchName} in ${owner}/${repo}`);
+
     const { data: pullRequests } = await octokit.rest.pulls.list({
         owner,
         repo,
         head: `${owner}:${branchName}`,
     });
 
+    core.debug(`Found ${pullRequests.length} existing PRs`);
+
     if (pullRequests.length === 0) {
+        core.info(`Creating new PR for branch ${branchName}`);
         const { data: pr } = await octokit.rest.pulls.create({
             owner,
             repo,
@@ -62467,8 +62500,8 @@ async function createOrUpdatePR(octokit, branchName, owner, repo) {
             body: "This PR updates the supporters list.",
         });
 
-        // Enable auto-merge using GraphQL
         try {
+            core.debug(`Enabling auto-merge for PR ID: ${pr.node_id}`);
             await octokit.graphql(`
                 mutation EnableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
                     enablePullRequestAutoMerge(input: {
@@ -62485,24 +62518,28 @@ async function createOrUpdatePR(octokit, branchName, owner, repo) {
             core.info(`Auto-merge enabled for PR: ${pr.html_url}`);
         } catch (error) {
             core.warning(`Failed to enable auto-merge: ${error.message}`);
+            core.debug(`Auto-merge error details: ${JSON.stringify(error)}`);
         }
 
         core.info(`Pull request created: ${pr.html_url}`);
     } else {
-        core.info("Pull request already exists.");
+        core.info(`Pull request already exists: ${pullRequests[0].html_url}`);
     }
 }
 
 async function main() {
     try {
+        core.info("Starting patron update process");
+        core.debug(`Environment: ${JSON.stringify(process.env.GITHUB_REPOSITORY)}`);
+
         const filesToUpdate = js_yaml.load(core.getInput("files-to-update") || "[]");
+        core.debug(`Files to update: ${JSON.stringify(filesToUpdate)}`);
+
         if (!Array.isArray(filesToUpdate) || filesToUpdate.length === 0) {
             throw new Error("No files specified in 'files-to-update'.");
         }
 
         const data = await fetchSupporterData(CONFIG.JSON_URL);
-
-
 
         if (!Array.isArray(data?.tiers)) {
             throw new Error("Supporter tiers are missing or malformed.");
@@ -62527,6 +62564,7 @@ async function main() {
         let changesMade = false;
         for (const filePath of filesToUpdate) {
             try {
+                core.info(`Processing file: ${filePath}`);
                 const updatedContent = await updateFileContent(filePath, pattern, replacement);
                 if (updatedContent) {
                     await promises_namespaceObject.writeFile(filePath, updatedContent);
@@ -62535,27 +62573,66 @@ async function main() {
                 }
             } catch (err) {
                 core.error(`Failed to process ${filePath}: ${err.message}`);
+                core.debug(`Error stack: ${err.stack}`);
             }
         }
 
         if (changesMade) {
             const gitEmail = core.getInput("git-email") || "actions@github.com";
+            core.info(`Setting up git configuration with email: ${gitEmail}`);
 
             await execAsync(`git config user.name "GitHub Actions Bot"`);
             await execAsync(`git config user.email "${gitEmail}"`);
+
+            // Get git status before adding files
+            const { stdout: statusBefore } = await execAsync(`git status`);
+            core.debug(`Git status before add: ${statusBefore}`);
+
             await execAsync(`git add .`);
-            await execAsync(`git commit -m "docs: updated patrons list"`);
-            await execAsync(`git push -f origin ${CONFIG.BRANCH_NAME}`);
 
-            const octokit = new dist_bundle_Octokit();
-            const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
-            const repo = process.env.GITHUB_REPOSITORY?.split('/')[1];
+            const { stdout: porcelainStatus } = await execAsync(`git status --porcelain`);
+            core.debug(`Git porcelain status: ${porcelainStatus}`);
 
-            await createOrUpdatePR(octokit, CONFIG.BRANCH_NAME, owner, repo);
+            if (!porcelainStatus.trim()) {
+                core.info("No changes to commit, skipping commit and push operations");
+                return; // Or continue to next part of your workflow
+            } else {
+                core.info(`Changes detected: ${porcelainStatus.split('\n').length} files modified`);
+
+                try {
+                    core.info("Attempting to commit changes");
+                    await execAsync(`git commit -m "docs: updated patrons list"`);
+                    core.info("Commit successful");
+                } catch (error) {
+                    core.error("Git commit failed");
+                    // Check if there were no changes to commit
+                    const {stdout: diffCheck} = await execAsync(`git diff --staged --name-only`).catch(e => ({stdout: ""}));
+                    if (!diffCheck.trim()) {
+                        core.warning("No changes to commit - this might be why the commit failed");
+                    }
+                    throw error;
+                }
+
+
+                core.info(`Pushing to remote branch: ${CONFIG.BRANCH_NAME}`);
+                await execAsync(`git push -f origin ${CONFIG.BRANCH_NAME}`);
+                core.info("Push successful");
+
+                const octokit = new dist_bundle_Octokit();
+                const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
+                const repo = process.env.GITHUB_REPOSITORY?.split('/')[1];
+                core.debug(`Repository: ${owner}/${repo}`);
+
+                await createOrUpdatePR(octokit, CONFIG.BRANCH_NAME, owner, repo);
+            }
         } else {
             core.info("No changes detected. Skipping pull request creation.");
         }
+
+        core.info("Process completed successfully");
     } catch (error) {
+        core.error(`Failed with error: ${error.message}`);
+        core.debug(`Error stack: ${error.stack}`);
         core.setFailed(error.message);
     }
 }
