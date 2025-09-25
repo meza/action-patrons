@@ -13,6 +13,6 @@
   },
   "devDependencies": {
     "@evilmartians/lefthook": "1.13.4",
-    "@vercel/ncc": "0.38.3"
+    "@vercel/ncc": "0.38.4"
   }
 }
