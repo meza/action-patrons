@@ -12,7 +12,7 @@
     "js-yaml": "4.1.0"
   },
   "devDependencies": {
-    "@evilmartians/lefthook": "1.13.5",
+    "@evilmartians/lefthook": "1.13.6",
     "@vercel/ncc": "0.38.4"
   }
 }
