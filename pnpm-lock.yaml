@@ -19,8 +19,8 @@ importers:
         version: 4.1.1
     devDependencies:
       '@evilmartians/lefthook':
-        specifier: 2.1.1
-        version: 2.1.1
+        specifier: 2.1.2
+        version: 2.1.2
       '@vercel/ncc':
         specifier: 0.38.4
         version: 0.38.4
@@ -39,8 +39,8 @@ packages:
   '@actions/io@3.0.2':
     resolution: {integrity: sha512-nRBchcMM+QK1pdjO7/idu86rbJI5YHUKCvKs0KxnSYbVe3F51UfGxuZX4Qy/fWlp6l7gWFwIkrOzN+oUK03kfw==}
 
-  '@evilmartians/lefthook@2.1.1':
-    resolution: {integrity: sha512-+nyEG9SCmI8wRhMbMr1GUFWfbIGeY/vlzenrMZgYWRVhEKOn/pQt4nQSQlQmaoxo4uOY13Vl53SaijFoE58bYg==}
+  '@evilmartians/lefthook@2.1.2':
+    resolution: {integrity: sha512-JNmor9whh28a+Dc7i4GIAHyom4p/Bmdi1o/QRmJAJyAxp/GOp7jB+kYz/4xkXzHSbTBrBX1wbQaSEwCU3hfgNA==}
     cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
@@ -145,7 +145,7 @@ snapshots:
 
   '@actions/io@3.0.2': {}
 
-  '@evilmartians/lefthook@2.1.1': {}
+  '@evilmartians/lefthook@2.1.2': {}
 
   '@octokit/action@8.0.4':
     dependencies:
