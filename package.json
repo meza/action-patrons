@@ -9,7 +9,7 @@
   "dependencies": {
     "@actions/core": "3.0.0",
     "@octokit/action": "8.0.4",
-    "js-yaml": "4.2.0"
+    "js-yaml": "4.3.0"
   },
   "devDependencies": {
     "@evilmartians/lefthook": "2.1.5",
