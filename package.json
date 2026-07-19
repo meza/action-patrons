@@ -14,5 +14,8 @@
   "devDependencies": {
     "@evilmartians/lefthook": "2.1.5",
     "@vercel/ncc": "0.38.4"
+  },
+  "engines": {
+    "node": "24"
   }
 }
