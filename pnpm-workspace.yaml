@@ -1,3 +1,6 @@
 allowBuilds:
   '@evilmartians/lefthook': true
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # Renovate security update: js-yaml@5.2.2
+  - js-yaml@5.2.2
