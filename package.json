@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "update-patrons.mjs",
   "type": "module",
-  "packageManager": "pnpm@11.15.1",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "build": "ncc build update-patrons.mjs -o dist"
   },
